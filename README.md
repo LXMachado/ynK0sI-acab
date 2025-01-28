@@ -1,9 +1,5 @@
 <div style="background: black;">
-<p align="center" style="margin: 0;">
-  <a href="https://dev.marblism.com" target="blank">
-    <img src="[https://marblism-dashboard-api--production-public.s3.us-west-1.amazonaws.com/marblism-logo.png](https://acurtainsandblinds.com.au/wp-content/themes/acurtains/images/logo.svg)" height="150" alt="Marblism Logo" />
-  </a>
-</p>
+<p align="center" style="margin: 0;"</p>
 <h1 align="center" style="margin: 0;">ACAB - A Job Management App</h1>
 
 <a  style="margin: 0;" target="_blank" href="https://marblism.com">
