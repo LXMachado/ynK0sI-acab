@@ -1,7 +1,7 @@
 <div style="background: black;">
 <p align="center" style="margin: 0;">
   <a href="https://dev.marblism.com" target="blank">
-    <img src="https://marblism-dashboard-api--production-public.s3.us-west-1.amazonaws.com/marblism-logo.png" height="150" alt="Marblism Logo" />
+    <img src="[https://marblism-dashboard-api--production-public.s3.us-west-1.amazonaws.com/marblism-logo.png](https://acurtainsandblinds.com.au/wp-content/themes/acurtains/images/logo.svg)" height="150" alt="Marblism Logo" />
   </a>
 </p>
 <h1 align="center" style="margin: 0;">ACAB - A Job Management App</h1>
@@ -74,9 +74,9 @@ A centralized home page displaying:
 
 ## Technical Considerations
 
-- Ensure the app is responsive and functional across devices, especially iPads.
-- Design a clean and intuitive UI/UX for users with minimal technical experience.
-- The app must scale to accommodate additional user stories or departments in the future.
+- Responsive and functional across devices, especially iPads.
+- Clean and intuitive UI/UX for users with minimal technical experience.
+- Scalability to accommodate additional user stories or departments in the future.
 
 ## Installation
 
