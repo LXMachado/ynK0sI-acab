@@ -4,7 +4,10 @@ import { useNavigate, useSearchParams } from '@remix-run/react'
 import { Button, Flex, Form, Input, Typography, message } from 'antd'
 import { useEffect, useState } from 'react'
 import { AuthenticationClient } from '~/core/authentication/client'
-import { ErrorBoundary } from '@/designSystem/core/ErrorBoundary'
+
+export const loader = () => {
+  return null
+}
 
 function LoginPage() {
   const router = useNavigate()
@@ -60,7 +63,7 @@ function LoginPage() {
     if (process.env.NODE_ENV === 'development') {
       console.log('Login attempt:', {
         email: values.email,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       })
     }
 
