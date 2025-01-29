@@ -14,6 +14,7 @@ export default function LoginPage() {
 
   const { mutateAsync: login } = Api.authentication.login.useMutation({
     onSuccess: data => {
+      setLoading(false)
       if (data.redirect) {
         try {
           window.location.href = data.redirect
@@ -43,8 +44,10 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
+      console.log('Development mode detected - setting test credentials')
       form.setFieldValue('email', 'test@test.com')
       form.setFieldValue('password', 'password')
+      message.warning('Using development credentials')
     }
   }, [])
 
@@ -54,7 +57,13 @@ export default function LoginPage() {
     try {
       await login({ email: values.email, password: values.password })
     } catch (error) {
-      message.error(`Could not login: ${error.message}`)
+      if (!navigator.onLine) {
+        message.error('Network error: Please check your internet connection')
+      } else if (error.message.includes('Network Error')) {
+        message.error('Network error: Unable to reach the server')
+      } else {
+        message.error(`Could not login: ${error.message}`)
+      }
       setLoading(false)
     }
   }

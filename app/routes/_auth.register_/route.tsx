@@ -13,11 +13,19 @@ export default function RegisterPage() {
   const [form] = Form.useForm()
 
   const [isLoading, setLoading] = useState(false)
+  const [error, setError] = useState<string>()
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Development mode detected - registration form')
+    }
+  }, [])
 
   const { mutateAsync: register } = Api.authentication.register.useMutation()
 
   const { mutateAsync: login } = Api.authentication.login.useMutation({
     onSuccess: data => {
+      setLoading(false)
       if (data.redirect) {
         window.location.href = data.redirect
       }
@@ -42,10 +50,13 @@ export default function RegisterPage() {
 
       login(values)
     } catch (error) {
-      console.error(`Could not signup: ${error.message}`, {
-        variant: 'error',
-      })
-
+      if (!navigator.onLine) {
+        setError('Network error: Please check your internet connection')
+      } else if (error.message.includes('Network Error')) {
+        setError('Network error: Unable to reach the server')
+      } else {
+        setError(`Registration failed: ${error.message}`)
+      }
       setLoading(false)
     }
   }
@@ -62,6 +73,8 @@ export default function RegisterPage() {
         gap="middle"
       >
         <AppHeader description="Welcome!" />
+
+        {error && <Typography.Text type="danger">{error}</Typography.Text>}
 
         <Form
           form={form}
