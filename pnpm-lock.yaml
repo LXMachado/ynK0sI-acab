@@ -135,7 +135,7 @@ importers:
         specifier: ^1.167.0
         version: 1.167.0
       prisma:
-        specifier: ^5.19.1
+        specifier: ^5.20.0
         version: 5.20.0
       react:
         specifier: 18.3.1

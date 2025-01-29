@@ -68,7 +68,7 @@
     "pdf-parse": "^1.1.1",
     "postcss": "^8.4.38",
     "posthog-js": "^1.167.0",
-    "prisma": "^5.19.1",
+    "prisma": "^5.20.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "recharts": "^2.12.7",
