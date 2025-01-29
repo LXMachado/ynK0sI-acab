@@ -4,13 +4,15 @@ import { useNavigate, useSearchParams } from '@remix-run/react'
 import { Button, Flex, Form, Input, Typography, message } from 'antd'
 import { useEffect, useState } from 'react'
 import { AuthenticationClient } from '~/core/authentication/client'
+import { ErrorBoundary } from '@/designSystem/core/ErrorBoundary'
 
-export default function LoginPage() {
+function LoginPage() {
   const router = useNavigate()
   const [searchParams] = useSearchParams()
 
   const [form] = Form.useForm()
   const [isLoading, setLoading] = useState(false)
+  const [loginError, setLoginError] = useState('')
 
   const { mutateAsync: login } = Api.authentication.login.useMutation({
     onSuccess: data => {
@@ -53,16 +55,30 @@ export default function LoginPage() {
 
   const handleSubmit = async (values: any) => {
     setLoading(true)
+    setLoginError('')
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Login attempt:', {
+        email: values.email,
+        timestamp: new Date().toISOString()
+      })
+    }
 
     try {
       await login({ email: values.email, password: values.password })
     } catch (error) {
       if (!navigator.onLine) {
+        setLoginError('Network error: Please check your internet connection')
         message.error('Network error: Please check your internet connection')
       } else if (error.message.includes('Network Error')) {
+        setLoginError('Network error: Unable to reach the server')
         message.error('Network error: Unable to reach the server')
+      } else if (error.message.includes('Invalid credentials')) {
+        setLoginError('Authentication failed: Invalid email or password')
+        message.error('Authentication failed: Invalid email or password')
       } else {
-        message.error(`Could not login: ${error.message}`)
+        setLoginError(`Login error: ${error.message}`)
+        message.error(`Login error: ${error.message}`)
       }
       setLoading(false)
     }
@@ -81,8 +97,10 @@ export default function LoginPage() {
       >
         <AppHeader description="Welcome!" />
 
-        {errorKey && (
-          <Typography.Text type="danger">{errorMessage}</Typography.Text>
+        {(errorKey || loginError) && (
+          <Typography.Text type="danger">
+            {loginError || errorMessage}
+          </Typography.Text>
         )}
 
         <Form

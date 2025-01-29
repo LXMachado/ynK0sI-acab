@@ -1,5 +1,6 @@
 import { Utility } from '@/core/helpers/utility'
 import { Api } from '@/core/trpc'
+import { ErrorBoundary } from '@/designSystem/core'
 import { AppHeader } from '@/designSystem/ui/AppHeader'
 import { User } from '@prisma/client'
 import { useNavigate, useSearchParams } from '@remix-run/react'
@@ -14,10 +15,14 @@ export default function RegisterPage() {
 
   const [isLoading, setLoading] = useState(false)
   const [error, setError] = useState<string>()
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({})
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       console.log('Development mode detected - registration form')
+      console.log('Registration form mounted - ready for registration attempts')
     }
   }, [])
 
@@ -42,11 +47,25 @@ export default function RegisterPage() {
 
   const handleSubmit = async (values: Partial<User>) => {
     setLoading(true)
+    setError(undefined)
+    setValidationErrors({})
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Registration attempt:', {
+        email: values.email,
+        name: values.name,
+        hasPassword: !!values.password,
+      })
+    }
 
     try {
       const tokenInvitation = searchParams.get('tokenInvitation') ?? undefined
 
       await register({ ...values, tokenInvitation })
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Registration successful - proceeding to login')
+      }
 
       login(values)
     } catch (error) {
@@ -54,80 +73,102 @@ export default function RegisterPage() {
         setError('Network error: Please check your internet connection')
       } else if (error.message.includes('Network Error')) {
         setError('Network error: Unable to reach the server')
+      } else if (error.message.includes('Password must have')) {
+        setValidationErrors({ password: error.message })
+      } else if (error.message.includes('Email is not available')) {
+        setValidationErrors({ email: 'This email is already registered' })
       } else {
         setError(`Registration failed: ${error.message}`)
       }
+
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Registration error:', error)
+      }
+
       setLoading(false)
     }
   }
 
   return (
-    <Flex align="center" justify="center" vertical flex={1}>
-      <Flex
-        vertical
-        style={{
-          width: '340px',
-          paddingBottom: '50px',
-          paddingTop: '50px',
-        }}
-        gap="middle"
-      >
-        <AppHeader description="Welcome!" />
-
-        {error && <Typography.Text type="danger">{error}</Typography.Text>}
-
-        <Form
-          form={form}
-          onFinish={handleSubmit}
-          layout="vertical"
-          autoComplete="off"
-          requiredMark={false}
+    <ErrorBoundary>
+      <Flex align="center" justify="center" vertical flex={1}>
+        <Flex
+          vertical
+          style={{
+            width: '340px',
+            paddingBottom: '50px',
+            paddingTop: '50px',
+          }}
+          gap="middle"
         >
-          <Form.Item
-            label="Email"
-            name="email"
-            rules={[{ required: true, message: 'Email is required' }]}
-          >
-            <Input type="email" placeholder="Your email" autoComplete="email" />
-          </Form.Item>
-          <Form.Item
-            name="name"
-            rules={[{ required: true, message: 'Name is required' }]}
-            label="Name"
-          >
-            <Input placeholder="Your name" />
-          </Form.Item>
+          <AppHeader description="Welcome!" />
 
-          <Form.Item
-            label="Password"
-            name="password"
-            rules={[{ required: true, message: 'Password is required' }]}
+          {error && <Typography.Text type="danger">{error}</Typography.Text>}
+
+          <Form
+            form={form}
+            onFinish={handleSubmit}
+            layout="vertical"
+            autoComplete="off"
+            requiredMark={false}
           >
-            <Input.Password
-              type="password"
-              placeholder="Your password"
-              autoComplete="current-password"
-            />
-          </Form.Item>
+            <Form.Item
+              label="Email"
+              name="email"
+              rules={[{ required: true, message: 'Email is required' }]}
+            >
+              <Input
+                type="email"
+                placeholder="Your email"
+                autoComplete="email"
+              />
+            </Form.Item>
+            <Form.Item
+              name="name"
+              rules={[{ required: true, message: 'Name is required' }]}
+              label="Name"
+            >
+              <Input placeholder="Your name" />
+            </Form.Item>
 
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={isLoading} block>
-              Register
-            </Button>
-          </Form.Item>
-        </Form>
+            <Form.Item
+              label="Password"
+              name="password"
+              rules={[{ required: true, message: 'Password is required' }]}
+            >
+              <Input.Password
+                type="password"
+                placeholder="Your password"
+                autoComplete="current-password"
+              />
+            </Form.Item>
 
-        <Button
-          ghost
-          style={{ border: 'none' }}
-          onClick={() => router('/login')}
-        >
-          <Flex gap={'small'} justify="center">
-            <Typography.Text type="secondary">Have an account?</Typography.Text>{' '}
-            <Typography.Text>Sign in</Typography.Text>
-          </Flex>
-        </Button>
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={isLoading}
+                block
+              >
+                Register
+              </Button>
+            </Form.Item>
+          </Form>
+
+          <Button
+            ghost
+            style={{ border: 'none' }}
+            onClick={() => router('/login')}
+          >
+            <Flex gap={'small'} justify="center">
+              <Typography.Text type="secondary">
+                Have an account?
+              </Typography.Text>{' '}
+              <Typography.Text>Sign in</Typography.Text>
+            </Flex>
+          </Button>
+        </Flex>
       </Flex>
-    </Flex>
+    </ErrorBoundary>
   )
 }
