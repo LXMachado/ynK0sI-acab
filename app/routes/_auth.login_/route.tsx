@@ -42,7 +42,7 @@ export default function LoginPage() {
   }[errorKey ?? 'default']
 
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
+    if (window.location.hostname === 'test@test.com') {
       form.setFieldValue('email', 'test@test.com')
       form.setFieldValue('password', 'password')
     }
