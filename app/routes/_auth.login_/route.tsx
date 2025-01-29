@@ -1,33 +1,36 @@
+import { Database } from '@/core/database'
 import { Api } from '@/core/trpc'
 import { AppHeader } from '@/designSystem/ui/AppHeader'
-import { useNavigate, useSearchParams, useLoaderData } from '@remix-run/react'
+import { useLoaderData, useNavigate, useSearchParams } from '@remix-run/react'
 import { Button, Flex, Form, Input, Typography, message } from 'antd'
 import { useEffect, useState } from 'react'
 import { AuthenticationClient } from '~/core/authentication/client'
-import { Database } from '@/core/database'
 
 export const loader = async () => {
   if (!process.env.SERVER_DATABASE_URL) {
-    return { error: "Database connection string missing" };
+    return { error: 'Database connection string missing' }
   }
   try {
-    await Database.$connect();
-    return null;
+    await Database.$connect()
+    return null
   } catch (error) {
-    return { error: "Database connection failed" };
+    console.error('Database connection error:', error)
+    return { error: 'Database connection failed' }
+  } finally {
+    await Database.$disconnect()
   }
 }
 
 function LoginPage() {
-  const data = useLoaderData<{ error?: string }>();
+  const data = useLoaderData<{ error?: string }>()
   if (data?.error) {
     return (
       <Flex align="center" justify="center" vertical flex={1}>
         <Typography.Text type="danger">{data.error}</Typography.Text>
       </Flex>
-    );
+    )
   }
-  
+
   const router = useNavigate()
   const [searchParams] = useSearchParams()
 
