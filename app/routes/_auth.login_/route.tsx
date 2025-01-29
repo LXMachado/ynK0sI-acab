@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams, useLoaderData } from '@remix-run/react'
 import { Button, Flex, Form, Input, Typography, message } from 'antd'
 import { useEffect, useState } from 'react'
 import { AuthenticationClient } from '~/core/authentication/client'
+import { Database } from '@/core/database'
 
 export const loader = async () => {
   if (!process.env.SERVER_DATABASE_URL) {
