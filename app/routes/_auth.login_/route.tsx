@@ -1,7 +1,7 @@
 import { Api } from '@/core/trpc'
 import { AppHeader } from '@/designSystem/ui/AppHeader'
 import { useNavigate, useSearchParams } from '@remix-run/react'
-import { Button, Flex, Form, Input, Typography } from 'antd'
+import { Button, Flex, Form, Input, Typography, message } from 'antd'
 import { useEffect, useState } from 'react'
 import { AuthenticationClient } from '~/core/authentication/client'
 
@@ -15,7 +15,11 @@ export default function LoginPage() {
   const { mutateAsync: login } = Api.authentication.login.useMutation({
     onSuccess: data => {
       if (data.redirect) {
-        window.location.href = data.redirect
+        try {
+          window.location.href = data.redirect
+        } catch (error) {
+          message.error(`Navigation failed: ${error.message}`)
+        }
       }
     },
   })
@@ -50,8 +54,7 @@ export default function LoginPage() {
     try {
       await login({ email: values.email, password: values.password })
     } catch (error) {
-      console.error(`Could not login: ${error.message}`, { variant: 'error' })
-
+      message.error(`Could not login: ${error.message}`)
       setLoading(false)
     }
   }
