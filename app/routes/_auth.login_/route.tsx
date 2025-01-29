@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { AuthenticationClient } from '~/core/authentication/client'
 
 export const loader = () => {
-  return null
+  return null; // Return null since we don't need to load any data for the login page
 }
 
 function LoginPage() {
@@ -49,12 +49,14 @@ function LoginPage() {
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('Development mode detected - setting test credentials')
-      form.setFieldValue('email', 'test@test.com')
-      form.setFieldValue('password', 'password')
-      message.warning('Using development credentials')
+      if (!form.getFieldValue('email')) {
+        console.log('Development mode detected - setting test credentials')
+        form.setFieldValue('email', 'test@test.com')
+        form.setFieldValue('password', 'password')
+        message.warning('Using development credentials')
+      }
     }
-  }, [])
+  }, [form])
 
   const handleSubmit = async (values: any) => {
     setLoading(true)
@@ -102,7 +104,8 @@ function LoginPage() {
 
         {(errorKey || loginError) && (
           <Typography.Text type="danger">
-            {loginError || errorMessage}
+            {loginError ||
+              (errorMessage !== 'null' ? errorMessage : 'Unable to sign in')}
           </Typography.Text>
         )}
 
