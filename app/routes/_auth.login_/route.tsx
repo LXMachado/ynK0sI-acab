@@ -14,10 +14,14 @@ export default function LoginPage() {
 
   const { mutateAsync: login } = Api.authentication.login.useMutation({
     onSuccess: data => {
+      setLoading(false)
       if (data.redirect) {
         window.location.href = data.redirect
       }
     },
+    onError: () => {
+      setLoading(false)
+    }
   })
 
   const errorKey = searchParams.get('error')
@@ -37,12 +41,17 @@ export default function LoginPage() {
     default: 'Unable to sign in.',
   }[errorKey ?? 'default']
 
+  const { data: testUser } = Api.user.findFirst.useQuery(
+    { where: { email: 'test@test.com' } },
+    { enabled: process.env.NODE_ENV === 'development' }
+  )
+
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development' && testUser) {
       form.setFieldValue('email', 'test@test.com')
       form.setFieldValue('password', 'password')
     }
-  }, [])
+  }, [testUser])
 
   const handleSubmit = async (values: any) => {
     setLoading(true)
@@ -50,9 +59,15 @@ export default function LoginPage() {
     try {
       await login({ email: values.email, password: values.password })
     } catch (error) {
-      console.error(`Could not login: ${error.message}`, { variant: 'error' })
-
-      setLoading(false)
+      console.error('Login error:', {
+        message: error.message,
+        stack: error.stack,
+        details: error
+      })
+      form.setFields([{
+        name: 'email',
+        errors: ['Invalid email or password']
+      }])
     }
   }
 
