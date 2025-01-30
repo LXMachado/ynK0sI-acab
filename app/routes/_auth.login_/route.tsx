@@ -1,21 +1,48 @@
 import { Api } from '@/core/trpc'
 import { AppHeader } from '@/designSystem/ui/AppHeader'
-import { useNavigate, useSearchParams } from '@remix-run/react'
-import { Button, Flex, Form, Input, Typography } from 'antd'
+import { useNavigate, useSearchParams, useLoaderData } from '@remix-run/react'
+import { Button, Flex, Form, Input, Typography, message } from 'antd'
 import { useEffect, useState } from 'react'
 import { AuthenticationClient } from '~/core/authentication/client'
 
-export default function LoginPage() {
+export const loader = async () => {
+  if (!process.env.SERVER_DATABASE_URL) {
+    return { error: "Database connection string missing" };
+  }
+  try {
+    await Database.$connect();
+    return null;
+  } catch (error) {
+    return { error: "Database connection failed" };
+  }
+}
+
+function LoginPage() {
+  const data = useLoaderData<{ error?: string }>();
+  if (data?.error) {
+    return (
+      <Flex align="center" justify="center" vertical flex={1}>
+        <Typography.Text type="danger">{data.error}</Typography.Text>
+      </Flex>
+    );
+  }
+  
   const router = useNavigate()
   const [searchParams] = useSearchParams()
 
   const [form] = Form.useForm()
   const [isLoading, setLoading] = useState(false)
+  const [loginError, setLoginError] = useState('')
 
   const { mutateAsync: login } = Api.authentication.login.useMutation({
     onSuccess: data => {
+      setLoading(false)
       if (data.redirect) {
-        window.location.href = data.redirect
+        try {
+          window.location.href = data.redirect
+        } catch (error) {
+          message.error(`Navigation failed: ${error.message}`)
+        }
       }
     },
   })
@@ -39,19 +66,42 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      form.setFieldValue('email', 'test@test.com')
-      form.setFieldValue('password', 'password')
+      if (!form.getFieldValue('email')) {
+        console.log('Development mode detected - setting test credentials')
+        form.setFieldValue('email', 'test@test.com')
+        form.setFieldValue('password', 'password')
+        message.warning('Using development credentials')
+      }
     }
-  }, [])
+  }, [form])
 
   const handleSubmit = async (values: any) => {
     setLoading(true)
+    setLoginError('')
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Login attempt:', {
+        email: values.email,
+        timestamp: new Date().toISOString(),
+      })
+    }
 
     try {
       await login({ email: values.email, password: values.password })
     } catch (error) {
-      console.error(`Could not login: ${error.message}`, { variant: 'error' })
-
+      if (!navigator.onLine) {
+        setLoginError('Network error: Please check your internet connection')
+        message.error('Network error: Please check your internet connection')
+      } else if (error.message.includes('Network Error')) {
+        setLoginError('Network error: Unable to reach the server')
+        message.error('Network error: Unable to reach the server')
+      } else if (error.message.includes('Invalid credentials')) {
+        setLoginError('Authentication failed: Invalid email or password')
+        message.error('Authentication failed: Invalid email or password')
+      } else {
+        setLoginError(`Login error: ${error.message}`)
+        message.error(`Login error: ${error.message}`)
+      }
       setLoading(false)
     }
   }
@@ -69,8 +119,11 @@ export default function LoginPage() {
       >
         <AppHeader description="Welcome!" />
 
-        {errorKey && (
-          <Typography.Text type="danger">{errorMessage}</Typography.Text>
+        {(errorKey || loginError) && (
+          <Typography.Text type="danger">
+            {loginError ||
+              (errorMessage !== 'null' ? errorMessage : 'Unable to sign in')}
+          </Typography.Text>
         )}
 
         <Form
