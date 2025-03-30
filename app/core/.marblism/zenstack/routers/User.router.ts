@@ -1,17 +1,21 @@
 /* eslint-disable */
-import { type RouterFactory, type ProcBuilder, type BaseConfig, db } from ".";
-import * as _Schema from '@zenstackhq/runtime/zod/input';
-const $Schema: typeof _Schema = (_Schema as any).default ?? _Schema;
-import { checkRead, checkMutate } from '../helper';
 import type { Prisma } from '@prisma/client';
-import type { UseTRPCMutationOptions, UseTRPCMutationResult, UseTRPCQueryOptions, UseTRPCQueryResult, UseTRPCInfiniteQueryOptions, UseTRPCInfiniteQueryResult } from '@trpc/react-query/shared';
 import type { TRPCClientErrorLike } from '@trpc/client';
+import type { UseTRPCInfiniteQueryOptions, UseTRPCInfiniteQueryResult, UseTRPCMutationOptions, UseTRPCMutationResult, UseTRPCQueryOptions, UseTRPCQueryResult } from '@trpc/react-query/shared';
 import type { AnyRouter } from '@trpc/server';
+import * as _Schema from '@zenstackhq/runtime/zod/input';
+import { type BaseConfig, db, type ProcBuilder, type RouterFactory } from ".";
+import { checkMutate, checkRead } from '../helper';
+const $Schema: typeof _Schema = (_Schema as any).default ?? _Schema;
 
 export default function createRouter<Config extends BaseConfig>(router: RouterFactory<Config>, procedure: ProcBuilder<Config>) {
     return router({
+        createMany: procedure.input($Schema.UserInputSchema.createMany.optional()).mutation(async ({ ctx, input }) => 
+            checkMutate(db(ctx).user.createMany(input as any))
+        ),
+        
 
-        createMany: procedure.input($Schema.UserInputSchema.createMany.optional()).mutation(async ({ ctx, input }) => checkMutate(db(ctx).user.createMany(input as any))),
+       
 
         create: procedure.input($Schema.UserInputSchema.create).mutation(async ({ ctx, input }) => checkMutate(db(ctx).user.create(input as any))),
 
